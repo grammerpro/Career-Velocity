@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareerVelocity</title>
+  <style>
+    /* ── Reset & Base ───────────────────────────────────────────────── */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0a0a14;
+      color: #f1f5f9;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────── */
+    .header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-logo {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #22d3ee);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 14px; color: #fff;
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #6366f1, #818cf8, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* ── Auth State ─────────────────────────────────────────────────── */
+    .auth-bar {
+      padding: 10px 20px;
+      background: rgba(22, 22, 40, 0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: #94a3b8;
+    }
+
+    .auth-bar-email { font-weight: 500; color: #a5b4fc; }
+
+    .btn-sm {
+      padding: 4px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(99,102,241,0.3);
+      background: transparent;
+      color: #818cf8;
+      font-size: 11px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-sm:hover { background: rgba(99,102,241,0.1); }
+
+    /* ── Status Area ────────────────────────────────────────────────── */
+    .status {
+      padding: 20px;
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+    }
+    .status-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.4; }
+
+    /* ── Loading ─────────────────────────────────────────────────────── */
+    .loading {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 40px 20px; gap: 12px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid rgba(99,102,241,0.2);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result Sections ────────────────────────────────────────────── */
+    .results { padding: 0; }
+
+    .section {
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .section-header {
+      padding: 12px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .section-header:hover { background: rgba(255,255,255,0.02); }
+
+    .section-title {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      color: #94a3b8;
+    }
+
+    .section-badge {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge-green { background: rgba(52,211,153,0.15); color: #34d399; }
+    .badge-amber { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .badge-red   { background: rgba(251,113,133,0.15); color: #fb7185; }
+
+    .section-content {
+      padding: 0 20px 16px;
+    }
+
+    /* ── Cover Letter ───────────────────────────────────────────────── */
+    .cover-letter {
+      background: rgba(22, 22, 40, 0.6);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 13px; line-height: 1.6;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    /* ── Keywords ────────────────────────────────────────────────────── */
+    .keywords { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .keyword {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 500;
+    }
+    .keyword-matched {
+      background: rgba(52,211,153,0.1); color: #34d399;
+      border: 1px solid rgba(52,211,153,0.2);
+    }
+    .keyword-missing {
+      background: rgba(251,113,133,0.1); color: #fb7185;
+      border: 1px solid rgba(251,113,133,0.2);
+    }
+
+    /* ── Copy Button ────────────────────────────────────────────────── */
+    .copy-btn {
+      display: flex; align-items: center; gap: 4px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(99,102,241,0.15);
+      color: #818cf8;
+      font-size: 11px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .copy-btn:hover { background: rgba(99,102,241,0.25); }
+    .copy-btn.copied { background: rgba(52,211,153,0.15); color: #34d399; }
+
+    /* ── Error ───────────────────────────────────────────────────────── */
+    .error {
+      margin: 20px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: rgba(127, 29, 29, 0.3);
+      border: 1px solid rgba(251,113,133,0.2);
+      color: #fca5a5;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo">⚡</div>
+    <span class="header-title">CareerVelocity</span>
+  </div>
+
+  <!-- Auth Bar -->
+  <div class="auth-bar" id="auth-bar">
+    <span id="auth-status">Checking…</span>
+    <button class="btn-sm" id="auth-btn" style="display:none">Log In</button>
+  </div>
+
+  <!-- Main Content -->
+  <div id="content">
+    <div class="status">
+      <div class="status-icon">🎯</div>
+      <p>Click <strong>Optimize with CareerVelocity</strong> on any job posting to get started.</p>
+    </div>
+  </div>
+
+  <script>
+    // ── DOM References ────────────────────────────────────────────────
+    const contentEl = document.getElementById("content");
+    const authStatus = document.getElementById("auth-status");
+    const authBtn = document.getElementById("auth-btn");
+
+    // ── Check Auth ────────────────────────────────────────────────────
+    chrome.runtime.sendMessage({ type: "CHECK_AUTH" }, (r) => {
+      if (r && r.authenticated) {
+        authStatus.innerHTML = `<span class="auth-bar-email">${r.email}</span>`;
+        authBtn.textContent = "Log Out";
+        authBtn.style.display = "block";
+        authBtn.onclick = () => {
+          chrome.runtime.sendMessage({ type: "LOGOUT" }, () => location.reload());
+        };
+      } else {
+        authStatus.textContent = "Not signed in";
+        authBtn.textContent = "Log In";
+        authBtn.style.display = "block";
+        authBtn.onclick = () => {
+          chrome.runtime.sendMessage({ type: "LOGIN" }, (res) => {
+            if (res && res.success) location.reload();
+          });
+        };
+      }
+    });
+
+    // ── Listen for Results ────────────────────────────────────────────
+    chrome.runtime.onMessage.addListener((msg) => {
+      if (msg.type === "TAILOR_RESULT") {
+        if (msg.success) {
+          renderResults(msg.data);
+        } else {
+          contentEl.innerHTML = `<div class="error">${msg.error || "Unknown error"}</div>`;
+        }
+      }
+
+      if (msg.type === "TAILOR_LOADING") {
+        contentEl.innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <p style="color:#94a3b8;font-size:13px">AI is tailoring your resume…</p>
+          </div>`;
+      }
+    });
+
+    // ── Render Results ────────────────────────────────────────────────
+    function renderResults(data) {
+      const ats = data.atsAnalysis || {};
+      const score = ats.score || 0;
+      const badgeClass = score >= 80 ? "badge-green" : score >= 60 ? "badge-amber" : "badge-red";
+
+      contentEl.innerHTML = `
+        <div class="results">
+          <!-- ATS Score -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">ATS Score</span>
+              <span class="section-badge ${badgeClass}">${score}%</span>
+            </div>
+            <div class="section-content">
+              <div class="keywords">
+                ${(ats.matchedKeywords || []).map(k => `<span class="keyword keyword-matched">${k}</span>`).join("")}
+                ${(ats.missingKeywords || []).map(k => `<span class="keyword keyword-missing">${k}</span>`).join("")}
+              </div>
+            </div>
+          </div>
+
+          <!-- Cover Letter -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Cover Letter</span>
+              <button class="copy-btn" id="copy-cl">📋 Copy</button>
+            </div>
+            <div class="section-content">
+              <div class="cover-letter" id="cover-letter-text">${data.coverLetter || "No cover letter generated."}</div>
+            </div>
+          </div>
+
+          <!-- Resume Summary -->
+          <div class="section">
+            <div class="section-header">
+              <span class="section-title">Tailored Summary</span>
+              <button class="copy-btn" id="copy-summary">📋 Copy</button>
+            </div>
+            <div class="section-content">
+              <div class="cover-letter">${data.tailoredResume?.summary || "—"}</div>
+            </div>
+          </div>
+        </div>`;
+
+      // Copy handlers
+      document.getElementById("copy-cl").onclick = () => copyText("copy-cl", data.coverLetter);
+      document.getElementById("copy-summary").onclick = () => copyText("copy-summary", data.tailoredResume?.summary);
+    }
+
+    function copyText(btnId, text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text);
+      const btn = document.getElementById(btnId);
+      btn.classList.add("copied");
+      btn.textContent = "✓ Copied";
+      setTimeout(() => { btn.classList.remove("copied"); btn.textContent = "📋 Copy"; }, 2000);
+    }
+  </script>
+</body>
+</html>
