@@ -32,7 +32,7 @@ async function getApplications(userId: string) {
         },
     });
 
-    return applications.map((a) => ({
+    return applications.map((a: any) => ({
         id: a.id,
         companyName: a.companyName,
         jobTitle: a.jobTitle,

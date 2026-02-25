@@ -125,12 +125,12 @@ async function getDashboardData() {
 
         const totalApplications = applications.length;
         const activeInterviews = applications.filter(
-            (a) => a.status === "INTERVIEW"
+            (a: any) => a.status === "INTERVIEW"
         ).length;
-        const appliedOrBeyond = applications.filter((a) =>
+        const appliedOrBeyond = applications.filter((a: any) =>
             ["APPLIED", "INTERVIEW", "OFFER"].includes(a.status)
         ).length;
-        const interviewsOrOffers = applications.filter((a) =>
+        const interviewsOrOffers = applications.filter((a: any) =>
             ["INTERVIEW", "OFFER"].includes(a.status)
         ).length;
         const successRate =
@@ -141,7 +141,7 @@ async function getDashboardData() {
         return {
             user,
             stats: { totalApplications, activeInterviews, successRate },
-            recentApplications: applications.slice(0, 5).map((a) => ({
+            recentApplications: applications.slice(0, 5).map((a: any) => ({
                 ...a,
                 applicationDate: a.applicationDate?.toISOString() ?? null,
                 createdAt: a.createdAt.toISOString(),
