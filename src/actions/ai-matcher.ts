@@ -10,14 +10,18 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function generateTailoredResume(baseResumeId: string, jobDescription: string) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+export async function generateTailoredResume(baseResumeId: string, jobDescription: string, forceUserId?: string) {
+    let userId = forceUserId;
+    if (!userId) {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+        userId = session.user.id;
+    }
 
     try {
         // 1. Fetch user to check quotas
         const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
+            where: { id: userId },
             select: { aiQuotaUsed: true, aiQuotaLimit: true }
         });
 
@@ -28,7 +32,7 @@ export async function generateTailoredResume(baseResumeId: string, jobDescriptio
 
         // 2. Fetch the Base Resume
         const baseResume = await prisma.baseResume.findUnique({
-            where: { id: baseResumeId, userId: session.user.id }
+            where: { id: baseResumeId, userId: userId }
         });
 
         if (!baseResume) return { success: false, error: "Base resume not found" };
@@ -104,7 +108,7 @@ Respond ONLY with a valid JSON object matching this exact schema:
             // Create Job Application
             prisma.jobApplication.create({
                 data: {
-                    userId: session.user.id,
+                    userId: userId,
                     companyName,
                     jobTitle,
                     rawDescription: jobDescription,
@@ -119,7 +123,7 @@ Respond ONLY with a valid JSON object matching this exact schema:
             }),
             // Increment Quota
             prisma.user.update({
-                where: { id: session.user.id },
+                where: { id: userId },
                 data: { aiQuotaUsed: { increment: 1 } }
             })
         ]);

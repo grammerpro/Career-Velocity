@@ -24,7 +24,7 @@ export default async function StorePage({
 
     const products = productsRes.success ? productsRes.data : [];
     const purchasedIds = new Set(
-        historyRes.success ? historyRes.data.map((p: any) => p.digitalProductId) : []
+        historyRes.success ? (historyRes.data?.map((p: any) => p.digitalProductId) ?? []) : []
     );
 
     return (
@@ -74,8 +74,8 @@ export default async function StorePage({
                             <div
                                 key={product.id}
                                 className={`relative flex flex-col p-6 rounded-2xl border transition-all duration-300 ${isPurchased
-                                        ? "bg-surface-800/50 border-white/5 opacity-80"
-                                        : "bg-surface-800 hover:bg-surface-700/50 border-white/10 hover:border-brand-500/50 shadow-xl hover:shadow-brand-500/10"
+                                    ? "bg-surface-800/50 border-white/5 opacity-80"
+                                    : "bg-surface-800 hover:bg-surface-700/50 border-white/10 hover:border-brand-500/50 shadow-xl hover:shadow-brand-500/10"
                                     }`}
                             >
                                 <div className="flex items-start justify-between mb-4">

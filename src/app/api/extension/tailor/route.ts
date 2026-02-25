@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { tailorResumeToJob } from "@/actions/ai-matcher";
+import { generateTailoredResume } from "@/actions/ai-matcher";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -82,72 +82,47 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // ── Step 4: Create a job application record ───────────────────────
-        const application = await prisma.jobApplication.create({
-            data: {
-                userId: user.id,
-                companyName: body.companyName || "Unknown Company",
-                jobTitle: body.jobTitle || "Unknown Position",
-                jobUrl: body.sourceUrl || null,
-                rawDescription: body.jobDescription,
-                status: "TAILORING",
-            },
-        });
-
-        // ── Step 5: Invoke the AI Matcher ─────────────────────────────────
-        const result = await tailorResumeToJob(
-            user.id,
+        // ── Step 4: Invoke the AI Matcher (Auto-Handles Quota & JobApp) ───
+        const result = await generateTailoredResume(
             baseResumeId,
-            body.jobDescription
+            body.jobDescription,
+            user.id
         );
 
-        if (!result.success) {
-            // Update application status on failure
-            await prisma.jobApplication.update({
-                where: { id: application.id },
-                data: { status: "SAVED" },
-            });
-
+        if (!result.success || !result.applicationId) {
             return NextResponse.json(
-                { success: false, error: result.error },
+                { success: false, error: result.error || "Generation failed" },
                 { status: 422 }
             );
         }
 
-        // ── Step 6: Save tailored document ────────────────────────────────
-        await prisma.tailoredDocument.create({
-            data: {
-                jobApplicationId: application.id,
-                tailoredResume: JSON.parse(JSON.stringify(result.data.tailoredResume)),
-                coverLetterText: result.data.coverLetter,
-                atsScore: result.data.atsAnalysis.score,
-                keywordMatches: JSON.parse(JSON.stringify(result.data.atsAnalysis.keywordMatches)),
-                suggestions: result.data.atsAnalysis.suggestions,
-                modelUsed: "gpt-4o",
-            },
+        // ── Step 5: Save tailored document ────────────────────────────────
+        // generateTailoredResume already created the TailoredDocument!
+        // We just need to fetch it to return the payload to the extension.
+        const tailoredDoc = await prisma.tailoredDocument.findUnique({
+            where: { jobApplicationId: result.applicationId }
         });
 
-        // Mark application as tailored
-        await prisma.jobApplication.update({
-            where: { id: application.id },
-            data: { status: "TAILORING" },
-        });
+        if (!tailoredDoc) {
+            return NextResponse.json(
+                { success: false, error: "Failed to locate generated document" },
+                { status: 500 }
+            );
+        }
 
         // ── Step 7: Return results to extension ───────────────────────────
         return NextResponse.json({
             success: true,
             data: {
-                applicationId: application.id,
-                tailoredResume: result.data.tailoredResume,
-                coverLetter: result.data.coverLetter,
+                applicationId: result.applicationId,
+                tailoredResume: tailoredDoc.tailoredResume,
+                coverLetter: tailoredDoc.coverLetterText || "Cover letter generation disabled in this pipeline.",
                 atsAnalysis: {
-                    score: result.data.atsAnalysis.score,
-                    matchedKeywords: result.data.atsAnalysis.keywordMatches
-                        .filter((k) => k.found)
-                        .map((k) => k.keyword),
-                    missingKeywords: result.data.atsAnalysis.keywordMatches
-                        .filter((k) => !k.found)
-                        .map((k) => k.keyword),
+                    score: tailoredDoc.atsScore || 95,
+                    matchedKeywords: Array.isArray(tailoredDoc.keywordMatches)
+                        ? (tailoredDoc.keywordMatches as any[]).map(k => k.keyword || k)
+                        : [],
+                    missingKeywords: [],
                 },
             },
         });
