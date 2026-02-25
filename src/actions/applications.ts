@@ -6,9 +6,10 @@
 // ============================================================================
 
 import prisma from "@/lib/prisma";
-import type { ApplicationStatus } from "@prisma/client";
 
 // ── Types ───────────────────────────────────────────────────────────────────
+
+export type ApplicationStatus = "SAVED" | "TAILORING" | "APPLIED" | "INTERVIEW" | "REJECTED" | "OFFER";
 
 export interface UpdateStatusResult {
     success: boolean;
