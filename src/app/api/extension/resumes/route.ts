@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
         success: true,
-        resumes: user.baseResumes.map((r) => ({
+        resumes: user.baseResumes.map((r: { id: string, title: string, updatedAt: Date }) => ({
             id: r.id,
             title: r.title,
             updatedAt: r.updatedAt.toISOString(),
